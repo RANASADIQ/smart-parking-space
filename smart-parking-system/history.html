@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking History</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #007bff, #28a745);
+            color: white;
+            text-align: center;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+        }
+        th {
+            background: rgba(0,0,0,0.3);
+        }
+        tr:nth-child(even) {
+            background: rgba(0,0,0,0.15);
+        }
+        .active { color: lightgreen; }
+        .cancelled { color: red; }
+        .expired { color: yellow; }
+        button {
+        background: red;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+         }
+
+        button:hover {
+        background: darkred;
+        }
+
+    </style>
+</head>
+<body>
+    <h2>📜 Booking History</h2>
+
+    <table>
+       <thead>
+    <tr>
+        <th>Slot</th>
+        <th>Start Time</th>
+        <th>Expiry Time</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+</thead>
+
+        <tbody id="historyTable"></tbody>
+    </table>
+
+    <a href="slot.html" style="color:white;">⬅ Back to Slots</a>
+
+<script>
+async function loadHistory() {
+    const user = sessionStorage.getItem("user");
+
+    const response = await fetch("http://localhost:5000/booking-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        const table = document.getElementById("historyTable");
+        table.innerHTML = "";
+
+        data.history.forEach(h => {
+            let cancelBtn = "";
+
+            if (h.status === "active" && new Date(h.expiryTime) > new Date()) {
+                cancelBtn = `<button onclick="cancelSlot('${h.slot}')">Cancel</button>`;
+            }
+
+            let row = `
+                <tr>
+                    <td>${h.slot}</td>
+                    <td>${new Date(h.startTime).toLocaleString()}</td>
+                    <td>${new Date(h.expiryTime).toLocaleString()}</td>
+                    <td class="${h.status}">${h.status}</td>
+                    <td>${cancelBtn}</td>
+                </tr>
+            `;
+
+            table.innerHTML += row;
+        });
+    }
+}
+
+async function cancelSlot(slot) {
+    const user = sessionStorage.getItem("user");
+
+    if (!confirm(`Cancel slot ${slot}?`)) return;
+
+    const response = await fetch("http://localhost:5000/cancel-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user, slot })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        alert("✅ Booking cancelled!");
+        location.reload();
+    } else {
+        alert("❌ Failed to cancel booking!");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadHistory);
+</script>
+</body>
+</html>

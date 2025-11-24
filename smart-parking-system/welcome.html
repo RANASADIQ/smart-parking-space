@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Vehicle Parking Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #83d531, #007bff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+        .welcome-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+        }
+        .welcome-container h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+        .welcome-container p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: none;
+            color: white;
+        }
+        .btn-login {
+            background-color: #46c832;
+        }
+        .btn-login:hover {
+            background-color: #218838;
+        }
+        .btn-register {
+            background-color: #007bff;
+        }
+        .btn-register:hover {
+            background-color: #0056b3;
+        }
+        .btn-contact {
+            background-color: #ffcc00;
+            color: black;
+        }
+        .btn-contact:hover {
+            background-color: #e6b800;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <h1> Welcome to Vehicle Parking Management System</h1>
+        <p>Reserve your parking space with ease! Enjoy a seamless experience for booking and managing parking slots.</p>
+        <div>
+            <a href="login.html" class="btn btn-login">Login</a>
+            <a href="register.html" class="btn btn-register">Register</a>
+            <a href="contact.html" class="btn btn-contact">Contact Us</a>
+        </div>
+    </div>
+</body>
+</html>

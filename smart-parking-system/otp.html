@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+                   font-family: Arial, sans-serif;
+                   background: linear-gradient(135deg, #2ad710, #15addb);
+                   display: flex;
+                   justify-content: center;
+                   align-items: center;
+                   height: 100vh;
+                   margin: 0;
+                   color: white;
+                   text-align: center;
+               }
+               .welcome-container {
+                   background: rgba(255, 255, 255, 0.1);
+                   padding: 40px;
+                   border-radius: 10px;
+                   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                   backdrop-filter: blur(10px);
+                   max-width: 500px;
+                   position: relative;
+                   overflow: hidden;
+               }
+               .welcome-container h1 {
+                   font-size: 26px;
+                   margin-bottom: 20px;
+                   position: relative;
+               }
+               .car {
+                   position: absolute;
+                   top: -20px;
+                   left: -60px;
+                   width: 60px;
+                   animation: moveCar 5s linear infinite;
+               }
+               @keyframes moveCar {
+                   0% {
+                       left: -60px;
+                   }
+                   100% {
+                       left: 100%;
+                   }
+               }
+               .welcome-container p {
+                   font-size: 18px;
+                   margin-bottom: 30px;
+               }
+               .input-field {
+                   padding: 12px;
+                   font-size: 16px;
+                   border-radius: 8px;
+                   border: none;
+                   width: 80%;
+                   text-align: center;
+                   margin-bottom: 20px;
+                   outline: none;
+                   transition: 0.3s;
+               }
+               .input-field:focus {
+                   box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+               }
+               .btn {
+                   display: inline-block;
+                   padding: 12px 20px;
+                   margin: 10px;
+                   border-radius: 5px;
+                   text-decoration: none;
+                   font-size: 16px;
+                   cursor: pointer;
+                   transition: 0.3s;
+                   border: none;
+                   color: white;
+               }
+               .btn-login {
+                   background-color: #28a745;
+               }
+               .btn-login:hover {
+                   background-color: #218838;
+               }
+               .btn-register {
+                   background-color: #007bff;
+               }
+               .btn-register:hover {
+                   background-color: #0056b3;
+               }
+               .btn-contact {
+                   background-color: #ffcc00;
+                   color: black;
+               }
+               .btn-contact:hover {
+                   background-color: #e6b800;
+               }
+       </style>    
+       </head>
+       <body>
+           <div class="welcome-container">
+               <h1>OTP Verification</h1>
+               <p>Please enter your email to receive the OTP.</p>
+               <input type="email" id="email" class="input-field" placeholder="Enter your email" required>
+               <button class="btn btn-login" id="sendOtpBtn">Send OTP</button>
+               <p>Enter the OTP sent to your email.</p>
+               <input type="text" id="otp" class="input-field" placeholder="Enter OTP" >
+               <button class="btn btn-register" id="verifyOtpBtn" disabled>Verify OTP</button>
+           </div>
+        </body>
+       
+<script>
+
+
+document.getElementById("sendOtpBtn").addEventListener("click", async () => {
+    let email = document.getElementById("email").value.trim();
+    if (!email) {
+        alert("❌ Please enter your email!");
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:5000/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert("✅ OTP sent successfully!");
+            document.getElementById("otp").disabled = false;
+            document.getElementById("verifyOtpBtn").disabled = false; // 🔥 Enable verify button
+        } else {
+            alert(`❌ ${data.message}`);
+        }
+    } catch (error) {
+        alert("❌ Failed to send OTP. Check your internet connection.");
+    }
+});
+
+
+document.getElementById("verifyOtpBtn").addEventListener("click", async () => {
+    let email = document.getElementById("email").value.trim();
+    let enteredOTP = document.getElementById("otp").value.trim();
+
+    if (!email || !enteredOTP) {
+        alert("❌ Please enter both email and OTP!");
+        return;
+    }
+
+    console.log("📤 Sending OTP verification request:", { email, otp: parseInt(enteredOTP) }); // Convert to number
+
+    try {
+        const response = await fetch("http://localhost:5000/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp: parseInt(enteredOTP) }) // Convert OTP to number
+        });
+
+        const data = await response.json();
+        console.log("🔍 Server Response:", data);
+
+        if (data.success) {
+            alert("✅ OTP verified! Saving booking...");
+
+let bookingData = {
+    user: sessionStorage.getItem("user"),
+    slot: sessionStorage.getItem("selectedSlot"),
+    startTime: new Date().toISOString(),
+    expiryTime: new Date(
+        Date.now() + sessionStorage.getItem("bookingDuration") * 60000
+    ).toISOString()
+};
+
+// ✅ Send booking info to backend
+await fetch("http://localhost:5000/book-slot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bookingData)
+});
+
+sessionStorage.setItem("otpVerified", "true");
+window.location.href = "confirm.html";
+
+        } else {
+            alert("❌ " + data.message);
+            document.getElementById("otp").value = "";
+        }
+    } catch (error) {
+        alert("❌ Something went wrong. Check console for details.");
+        console.error("🔴 Error:", error);
+    }
+});
+
+</script>
+
+
+ 
+
+
+
+
+</html>

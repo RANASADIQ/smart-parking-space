@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Parking - Interactive Slot Selection</title>
+    <style>
+                body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #28a745, #1faddc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+        }
+        h2 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+        .parking-lot {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .slot {
+            padding: 15px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 16px;
+        }
+        .slot:hover {
+            background-color: #218838;
+        }
+        .slot.selected {
+            background-color: #007bff;
+        }
+        .slot.booked {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        select#duration {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #fff;
+            color: #333;
+        }
+    </style>
+   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Vehicle Parking - Select Your Slot</h2>
+        
+        <div class="parking-lot" id="parkingLot"></div>
+
+        <label for="duration">Select Duration:</label>
+        <select id="duration">
+            <option value="30">30 minutes</option>
+            <option value="60">1 hour</option>
+            <option value="120">2 hours</option>
+        </select>
+        
+        <button id="bookSlotBtn" disabled>Confirm by OTP</button>
+        <button onclick="window.location.href='history.html'">📜 Booking History</button>
+
+    </div>
+
+    <script>
+        const slots = ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"];
+         let bookedSlots = [];
+
+async function loadBookedSlots() {
+    const response = await fetch("http://localhost:5000/booked-slots");
+    const data = await response.json();
+    if (data.success) {
+        bookedSlots = data.bookedSlots;
+    }
+    renderSlots();
+}
+        let selectedSlot = null;
+
+        const parkingLot = document.getElementById("parkingLot");
+        const bookSlotBtn = document.getElementById("bookSlotBtn");
+
+        // Generate Parking Slots
+        function renderSlots() {
+    parkingLot.innerHTML = "";
+
+    slots.forEach(slot => {
+        const div = document.createElement("div");
+        div.classList.add("slot");
+        div.innerText = slot;
+
+        if (bookedSlots.includes(slot)) {
+            div.classList.add("booked");
+        } else {
+            div.addEventListener("click", () => selectSlot(div, slot));
+        }
+
+        parkingLot.appendChild(div);
+    });
+}
+
+
+        // Slot Selection Function
+        function selectSlot(slotDiv, slot) {
+            // Deselect previous slot
+            document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
+
+            // Select new slot
+            slotDiv.classList.add("selected");
+            selectedSlot = slot;
+
+            bookSlotBtn.disabled = false;
+        }
+
+        // Booking Button Click
+        document.getElementById("bookSlotBtn").addEventListener("click", () => {
+    if (!selectedSlot) {
+        alert("Please select a slot.");
+        return;
+    }
+
+    let currentDateTime = new Date();
+    let hours = currentDateTime.getHours();
+    let minutes = currentDateTime.getMinutes();
+
+    let duration = parseInt(document.getElementById("duration").value); // Duration in minutes
+
+    // Calculate expiry time
+    let expiryDateTime = new Date(currentDateTime.getTime() + duration * 60000);
+    let expiryHours = expiryDateTime.getHours();
+    let expiryMinutes = expiryDateTime.getMinutes();
+
+    // Format time (without AM/PM)
+    let formattedTime = `${hours}:${minutes < 10 ? "0" + minutes : minutes}`;
+    let formattedExpiryTime = `${expiryHours}:${expiryMinutes < 10 ? "0" + expiryMinutes : expiryMinutes}`;
+
+    let date = currentDateTime.toISOString().split("T")[0];
+    let username = sessionStorage.getItem("loggedInUser") || "Guest";
+     // Generate QR Code URL
+     let qrData = `User: ${username}, Slot: ${selectedSlot}, Date: ${date}, Time: ${formattedTime}, Expiry: ${formattedExpiryTime}`;
+    let qrCodeURL = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
+
+
+    // ✅ Store booking details in sessionStorage
+    sessionStorage.setItem("selectedSlot", selectedSlot);
+    sessionStorage.setItem("bookingDate", date);
+    sessionStorage.setItem("bookingTime", formattedTime);
+    sessionStorage.setItem("bookingDuration", duration);
+    sessionStorage.setItem("expiryTime", formattedExpiryTime);
+    sessionStorage.setItem("user", username);
+    sessionStorage.setItem("qrCodeURL", qrCodeURL);
+    
+
+
+    // ✅ Redirect to OTP page
+    console.log("Redirecting to otp.html...");
+    window.location.href = "otp.html";
+});
+document.addEventListener("DOMContentLoaded", () => {
+    let token = sessionStorage.getItem("token");
+    if (!token) {
+        alert("❌ Please login first!");
+        window.location.href = "login.html";
+    } else {
+        console.log("✅ User is logged in. Access granted.");
+        loadBookedSlots();   // ✅ Fetch active bookings
+    }
+});
+
+    </script>
+</body>
+</html>

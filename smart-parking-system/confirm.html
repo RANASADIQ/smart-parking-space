@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+       body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #28a745, #007bff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: white;
+    text-align: center;
+    overflow: hidden; /* Prevents full page scrolling */
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    max-width: 500px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 95vh; /* Ensures it fits within screen */
+    overflow-y: auto; /* Allows scrolling if needed */
+}
+
+.qr-code {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    margin: 20px 0;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+    margin-top: auto; /* Ensures it stays below QR code */
+}
+
+.button {
+    padding: 12px 20px;
+    width: 80%;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    border: none;
+    color: white;
+}
+
+.button-print {
+    background-color: #28a745;
+}
+
+.button-print:hover {
+    background-color: #218838;
+}
+
+.button-book {
+    background-color: #007bff;
+}
+
+.button-book:hover {
+    background-color: #0056b3;
+}
+.button-cancel {
+    background-color: #dc3545;
+}
+.button-cancel:hover {
+    background-color: #b52a37;
+}
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    margin: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎉Booking Confirmed!</h2>
+        <p>Your parking slot has been successfully booked.</p>
+        <p><strong>User:</strong> <span id="user"></span></p>
+        <p><strong>Slot:</strong> <span id="slot"></span></p>
+        <p><strong>Date:</strong> <span id="date"></span></p>
+        <p><strong>Time:</strong> <span id="time"></span></p>
+        <p><strong>Time of Expiry:</strong> <span id="expiry-time">Calculating...</span></p>
+
+        <!-- QR Code Display -->
+        <div class="qr-code">
+            <div id="qrcode"></div>
+        </div>
+
+        <div class="buttons">
+            <button class="button button-print" onclick="window.print()">🖨 Print Confirmation</button>
+            <a href="slot.html" class="button button-book">📅 Book Another Slot</a>
+            <button onclick="window.location.href='history.html'">📜 View Booking History</button>
+
+          
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const slot = sessionStorage.getItem("selectedSlot") || "N/A";
+            const date = sessionStorage.getItem("bookingDate") || "N/A";
+            const time = sessionStorage.getItem("bookingTime") || "N/A";
+            const user = sessionStorage.getItem("user") || "Guest";
+            const duration = parseInt(sessionStorage.getItem("bookingDuration")) || 1;
+
+            console.log("Slot:", slot);
+            console.log("Date:", date);
+            console.log("Time:", time);
+            console.log("Duration:", duration);
+
+            const bookingTime = new Date(`${date}T${time}`);
+            const expiryTime = new Date(bookingTime.getTime() + duration * 60 * 1000);
+            const expiryFormatted = expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            document.getElementById("expiry-time").textContent = expiryFormatted;
+
+            if (slot === "N/A" || date === "N/A" || time === "N/A") {
+                document.querySelector(".container").innerHTML = `
+                    <h2>⚠️ Invalid Booking Details</h2>
+                    <p>No booking data found.</p>
+                    <a href='slot.html' class='button'>🔙 Go Back</a>`;
+                return;
+            }
+
+            document.getElementById("slot").textContent = slot;
+            document.getElementById("date").textContent = date;
+            document.getElementById("time").textContent = time;
+            document.getElementById("user").textContent = user;
+
+            const qrData = `User: ${user}\nSlot: ${slot}\nDate: ${date}\nTime: ${time}\nExpires at: ${expiryFormatted}`;
+            console.log("QR Data:", qrData);
+
+            if (window.QRCode) {
+                new QRCode(document.getElementById("qrcode"), {
+                    text: qrData,
+                    width: 130,
+                    height: 130
+                });
+            } else {
+                console.error("❌ QRCode library is not loaded!");
+            }
+});
+
+
+    </script>
+</body>
+</html>
+
